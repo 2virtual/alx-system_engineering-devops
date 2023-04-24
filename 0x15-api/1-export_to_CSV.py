@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # script to gather todo data from an API and write to CSV file
 import requests
-import sys
 import csv
+import sys
 
 # Check if the employee ID was provided as a parameter
 if len(sys.argv) != 2:
@@ -27,7 +27,6 @@ if user_response.status_code != 200:
 # Parse the user information
 user_data = user_response.json()
 employee_name = user_data['name']
-employee_username = user_data['username']
 
 # Make a request to the API to get the todo list information for the employee
 todo_url = base_url + 'todos?userId={}'.format(employee_id)
@@ -50,11 +49,11 @@ print("Employee {} is done with tasks({}/{}):".format(employee_name, number_of_d
 for task in done_tasks:
     print("\t{}".format(task['title']))
 
-# Export data in CSV format
-csv_filename = "{}.csv".format(employee_id)
-with open(csv_filename, 'w', newline='') as csvfile:
-    csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(['USER_ID', 'USERNAME', 'TASK_COMPLETED_STATUS', 'TASK_TITLE'])
+# Export the data to CSV file
+csv_file = "{}.csv".format(employee_id)
+with open(csv_file, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["USER_ID", "USERNAME", "TASK_COMPLETED_STATUS", "TASK_TITLE"])
     for task in todo_data:
-        csv_writer.writerow([employee_id, employee_username, task['completed'], task['title']])
+        writer.writerow([employee_id, employee_name, task['completed'], task['title']])
 
