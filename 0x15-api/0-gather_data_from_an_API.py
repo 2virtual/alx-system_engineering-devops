@@ -3,62 +3,48 @@
 import requests
 import sys
 
+# Check if the employee ID was provided as a parameter
+if len(sys.argv) != 2:
+    print("Usage: {} EMPLOYEE_ID".format(sys.argv[0]))
+    sys.exit(1)
 
-def get_username(base_url, user_id):
-    """Gets username
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: username
-    """
-    response = requests.get(
-        "{}users/{}".format(base_url, user_id))
-    usr_dict = response.json()
-    return usr_dict['name']
+# Base URL of the API
+base_url = 'https://jsonplaceholder.typicode.com/'
 
+# Get the employee ID from the command line arguments
+employee_id = sys.argv[1]
 
-def get_todo_list(base_url, user_id):
-    """Gets todo list
-       Args:
-           base_url (str): base url for API
-           user_id (str): user id number
-       Returns: list of todo items (dicts)
-    """
-    response = requests.get(
-        "{}users/{}/todos".format(base_url, user_id))
-    return response.json()
+# Make a request to the API to get the user information
+user_url = base_url + 'users/{}'.format(employee_id)
+user_response = requests.get(user_url)
 
+# Check if the user exists
+if user_response.status_code != 200:
+    print("Error: Employee with ID {} not found.".format(employee_id))
+    sys.exit(1)
 
-def get_completed(todo_list):
-    """Gets completed items
-       Args:
-           todo_list (list): list of todo items
-       Returns: string of todo items to print
-    """
+# Parse the user information
+user_data = user_response.json()
+employee_name = user_data['name']
 
-    done_str = ""
-    done_list = []
-    count = 0
-    for todo in todo_list:
-        if todo['completed'] is True:
-            count += 1
-            done_list.append("\t {}".format(todo['title']))
-    done_str = "\n".join(done_list)
+# Make a request to the API to get the todo list information for the employee
+todo_url = base_url + 'todos?userId={}'.format(employee_id)
+todo_response = requests.get(todo_url)
 
-    return count, done_str
+# Parse the todo list information
+todo_data = todo_response.json()
+number_of_done_tasks = 0
+total_number_of_tasks = len(todo_data)
+done_tasks = []
 
+# Find the number of completed tasks and the titles of those tasks
+for task in todo_data:
+    if task['completed']:
+        number_of_done_tasks += 1
+        done_tasks.append(task['title'])
 
-if __name__ == '__main__':
-    user_id = sys.argv[1]
-    base_url = 'https://jsonplaceholder.typicode.com/'
+# Print the employee's progress report
+print("Employee {} is done with tasks({}/{}):".format(employee_name, number_of_done_tasks, total_number_of_tasks))
+for task in done_tasks:
+    print("\t{}".format(task))
 
-    uname = get_username(base_url, user_id)
-    todo_list = get_todo_list(base_url, user_id)
-    total = len(todo_list)
-
-    count, done_str = get_completed(todo_list)
-
-    print(
-        "Employee {} is done with tasks({}/{}):".format(uname, count, total))
-    if count > 0:
-        print(done_str)
