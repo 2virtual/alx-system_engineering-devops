@@ -24,7 +24,7 @@ if user_response.status_code != 200:
     print("Error: Employee with ID {} not found.".format(employee_id))  # Error message
     sys.exit(1)
 
-# Parse the user information
+# Parse the user's information
 user_data = user_response.json()
 employee_name = user_data['name']  # Employee name
 
