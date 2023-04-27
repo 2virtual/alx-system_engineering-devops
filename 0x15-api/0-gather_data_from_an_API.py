@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# script to gather data from an API
 import requests
 import sys
 
@@ -47,4 +46,3 @@ for task in todo_data:
 print("Employee {} is done with tasks({}/{}):".format(employee_name, number_of_done_tasks, total_number_of_tasks))
 for task in done_tasks:
     print("\t{}".format(task))
-
