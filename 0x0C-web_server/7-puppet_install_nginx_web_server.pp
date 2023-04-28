@@ -1,6 +1,37 @@
 # Install nginx with Puppet
 
-exec { 'Nginx':
-  command  =>'sudo apt -y update && sudo apt -y install nginx && echo "Hello World" > /var/www/html/index.html && new_string="server_name _;\n\trewrite ^\/redirect_me https:\/\/www.github.com\/tallninja permanent;" && sed -i "s/server_name _;/$new_string/" /etc/nginx/sites-available/default && service nginx restart',
-  provider => 'shell',
+class nginx_config {
+  package { 'nginx':
+    ensure => installed,
+  }
+
+  file { '/etc/nginx/sites-available/default':
+    content => "
+server {
+    listen 80;
+    root /var/www/html;
+    index index.html;
+    location / {
+        return 301 /hello;
+    }
+    location /hello {
+        add_header Content-Type text/plain;
+        return 200 'Hello World!';
+    }
 }
+",
+  }
+
+  file { '/var/www/html/index.html':
+    ensure  => file,
+    content => "<html><body>Hello World!</body></html>",
+  }
+
+  service { 'nginx':
+    ensure => running,
+    enable => true,
+    require => File['/etc/nginx/sites-available/default'],
+  }
+}
+
+include nginx_config
