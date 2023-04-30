@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# bash script to make /redirect_me redirect to another site
-apt-get -y update
-apt-get -y install nginx
-mv /usr/share/nginx/html/index.html /usr/share/nginx/html/index.txt
-echo "Holberton School" > /usr/share/nginx/html/index.html
-new_string=".rules\n\t\trewrite ^\/redirect_me https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4 permanent;\n"
-sed -i "s/.rules/$new_string/" /etc/nginx/sites-available/default
-service nginx restart
+# This script configures a new Ubuntu machine to respect above requirements
+
+sudo apt-get update
+sudo apt-get install -y nginx
+
+echo "Hello World!" | sudo tee /var/www/html/index.html
+string_for_replacement="server_name _;\n\trewrite ^\/redirect_me https:\/\/www.google.com permanent;"
+sudo sed -i "s/server_name _;/$string_for_replacement/" /etc/nginx/sites-enabled/default
+
+sudo service nginx restart
+
