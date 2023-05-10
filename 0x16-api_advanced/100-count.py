@@ -1,54 +1,54 @@
 #!/usr/bin/python3
-"""Function to count words in all hot posts of a given Reddit subreddit."""
+""" Function to count words in all hot posts of a given Reddit subreddit."""
+
+import json
 import requests
 
 
-def count_words(subreddit, word_list):
-    # Base case: subreddit is invalid or no word_list provided
-    if subreddit is None or len(word_list) == 0:
-        return
+def count_words(subreddit, word_list, after="", count=[]):
+    """This function counts all words"""
 
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-    headers = {"User-Agent": "Mozilla/5.0"}  # Set a User-Agent header to avoid being blocked
+    if after == "":
+        count = [0] * len(word_list)
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception if the request was not successful
-        data = response.json()
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    request = requests.get(url,
+                           params={'after': after},
+                           allow_redirects=False,
+                           headers={'user-agent': 'bhalut'})
 
-        # Check if the response contains any posts
-        if "data" in data and "children" in data["data"]:
-            posts = data["data"]["children"]
-            word_counts = {}
+    if request.status_code == 200:
+        data = request.json()
 
-            # Iterate over the posts and count the occurrences of each word
-            for post in posts:
-                if "data" in post and "title" in post["data"]:
-                    title = post["data"]["title"]
-                    for word in word_list:
-                        word = word.lower()
-                        count = title.lower().split().count(word)
-                        if count > 0:
-                            if word in word_counts:
-                                word_counts[word] += count
-                            else:
-                                word_counts[word] = count
+        for topic in (data['data']['children']):
+            for word in topic['data']['title'].split():
+                for i in range(len(word_list)):
+                    if word_list[i].lower() == word.lower():
+                        count[i] += 1
 
-            # Sort the word counts by count (descending) and word (ascending)
-            sorted_counts = sorted(word_counts.items(), key=lambda x: (-x[1], x[0]))
+        after = data['data']['after']
+        if after is None:
+            save = []
+            for i in range(len(word_list)):
+                for j in range(i + 1, len(word_list)):
+                    if word_list[i].lower() == word_list[j].lower():
+                        save.append(j)
+                        count[i] += count[j]
 
-            # Print the sorted counts
-            for word, count in sorted_counts:
-                print(f"{word}: {count}")
+            for i in range(len(word_list)):
+                for j in range(i, len(word_list)):
+                    if (count[j] > count[i] or
+                            (word_list[i] > word_list[j] and
+                             count[j] == count[i])):
+                        aux = count[i]
+                        count[i] = count[j]
+                        count[j] = aux
+                        aux = word_list[i]
+                        word_list[i] = word_list[j]
+                        word_list[j] = aux
 
-    except requests.exceptions.RequestException as e:
-        print("An error occurred while making the request:", e)
-
-    # Recursive call with next page
-    if "data" in data and "after" in data["data"]:
-        after = data["data"]["after"]
-        count_words(subreddit, word_list, after)
-
-
-count_words("python", ["python", "javascript", "java"])
-
+            for i in range(len(word_list)):
+                if (count[i] > 0) and i not in save:
+                    print("{}: {}".format(word_list[i].lower(), count[i]))
+        else:
+            count_words(subreddit, word_list, after, count)
